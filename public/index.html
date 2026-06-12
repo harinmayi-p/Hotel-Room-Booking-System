@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LuxeStay — Hotel Room Booking System</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <div class="logo">
+    <div class="logo-icon">🏨</div>
+    <div class="logo-text">Luxe<span>Stay</span></div>
+  </div>
+  <div class="header-right" id="header-right" style="display:none;">
+    <div class="user-pill" id="user-pill">
+      <div class="user-avatar" id="user-avatar">A</div>
+      <span id="user-label">User</span>
+    </div>
+    <button class="logout-btn" onclick="logout()">Sign out</button>
+  </div>
+</header>
+
+<div class="page">
+
+<!-- ══════════════════════════════
+     SCREEN: SELECT ROLE
+══════════════════════════════ -->
+<div class="screen active" id="screen-select">
+  <div class="auth-center">
+    <div class="auth-hero">
+      <h1>Welcome to <span>LuxeStay</span></h1>
+      <p>Hotel Room Booking &amp; Management System</p>
+    </div>
+    <div class="role-grid">
+      <div class="role-card" onclick="goLogin('customer')">
+        <div class="role-icon">🧳</div>
+        <div class="role-name">Customer</div>
+        <div class="role-desc">Browse &amp; book rooms</div>
+      </div>
+      <div class="role-card" onclick="goLogin('staff')">
+        <div class="role-icon">🛎️</div>
+        <div class="role-name">Staff</div>
+        <div class="role-desc">Manage check-ins</div>
+      </div>
+      <div class="role-card" onclick="goLogin('admin')">
+        <div class="role-icon">⚙️</div>
+        <div class="role-name">Admin</div>
+        <div class="role-desc">Full system control</div>
+      </div>
+    </div>
+    <p class="select-hint">Select your role to continue</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     SCREEN: LOGIN  (F2)
+══════════════════════════════ -->
+<div class="screen" id="screen-login">
+  <div class="auth-center">
+    <div class="auth-form-box">
+      <h2 id="login-title">Login</h2>
+      <p class="auth-subtitle" id="login-sub">Enter your credentials to access the portal</p>
+      <div class="demo-hint" id="login-hint"></div>
+      <div class="err-msg" id="login-err">Invalid credentials. Please try again.</div>
+      <div class="form-field">
+        <label>Email / User ID</label>
+        <input type="text" id="login-id" placeholder="Enter your ID or email" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <div class="form-field">
+        <label>Password / PIN</label>
+        <input type="password" id="login-pass" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button class="btn-primary" onclick="doLogin()">Sign In →</button>
+      <div class="auth-links" id="auth-links-row"></div>
+      <span class="form-back" onclick="showScreen('select');document.getElementById('header-right').style.display='none'">← Back to role selection</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     SCREEN: REGISTER  (F1 — NEW)
+══════════════════════════════ -->
+<div class="screen" id="screen-register">
+  <div class="auth-center">
+    <div class="auth-form-box" style="width:460px;">
+      <h2>Create Account</h2>
+      <p class="auth-subtitle">Register to start booking hotel rooms</p>
+      <div class="err-msg" id="reg-err"></div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Full Name <span class="req">*</span></label>
+          <input type="text" id="reg-name" placeholder="Your full name">
+        </div>
+        <div class="form-field">
+          <label>Phone Number <span class="req">*</span></label>
+          <input type="text" id="reg-phone" placeholder="+91 9999999999">
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Email Address <span class="req">*</span></label>
+        <input type="email" id="reg-email" placeholder="you@example.com">
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Password <span class="req">*</span></label>
+          <input type="password" id="reg-pass" placeholder="Min 6 characters" oninput="checkPassStrength(this.value)">
+        </div>
+        <div class="form-field">
+          <label>Confirm Password <span class="req">*</span></label>
+          <input type="password" id="reg-confirm" placeholder="Repeat password">
+        </div>
+      </div>
+      <div class="pass-strength" id="pass-strength">
+        <div class="strength-bar"><div id="strength-fill"></div></div>
+        <span id="strength-label">Enter a password</span>
+      </div>
+      <button class="btn-primary" onclick="doRegister()" style="margin-top:10px;">Create Account →</button>
+      <span class="form-back" onclick="showScreen('login')">← Already have an account? Sign in</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     SCREEN: CUSTOMER DASHBOARD
+══════════════════════════════ -->
+<div class="screen" id="screen-customer">
+  <div class="dash-header">
+    <div class="dash-title-group">
+      <h2>Customer Portal</h2>
+      <p id="cust-welcome">Welcome back!</p>
+    </div>
+  </div>
+
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="custTab('browse',this)">🛏 Browse Rooms</button>
+    <button class="nav-tab" onclick="custTab('mybookings',this)">📋 My Bookings</button>
+    <button class="nav-tab" onclick="custTab('profile',this)">👤 My Profile</button>
+  </div>
+
+  <!-- BROWSE ROOMS (F4) -->
+  <div class="tab-pane active" id="tab-browse">
+    <div class="search-bar-grid">
+      <div class="form-field">
+        <label>Check-in Date</label>
+        <input type="date" id="ci-date" oninput="filterRooms()">
+      </div>
+      <div class="form-field">
+        <label>Check-out Date</label>
+        <input type="date" id="co-date" oninput="filterRooms()">
+      </div>
+      <div class="form-field">
+        <label>Room Type</label>
+        <select id="room-type-filter" onchange="filterRooms()" class="inline-select">
+          <option value="">All Types</option>
+          <option value="Single">Single</option>
+          <option value="Double">Double</option>
+          <option value="Suite">Suite</option>
+          <option value="Deluxe">Deluxe</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Guests</label>
+        <select id="guests-filter" onchange="filterRooms()" class="inline-select">
+          <option value="1">1 Guest</option>
+          <option value="2">2 Guests</option>
+          <option value="3">3 Guests</option>
+          <option value="4">4+ Guests</option>
+        </select>
+      </div>
+    </div>
+    <div id="search-results-label" class="section-note"></div>
+    <div class="rooms-grid" id="rooms-grid"></div>
+  </div>
+
+  <!-- MY BOOKINGS (F7, F8) -->
+  <div class="tab-pane" id="tab-mybookings">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">My Bookings</span>
+        <span class="panel-count" id="cust-booking-count">0 bookings</span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Booking ID</th><th>Room</th><th>Type</th><th>Guests</th>
+              <th>Check-in</th><th>Check-out</th><th>Nights</th><th>Amount</th>
+              <th>Payment Method</th><th>Pay Status</th><th>Booking Status</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="cust-bookings-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE (F1, F9) -->
+  <div class="tab-pane" id="tab-profile">
+    <div class="panel profile-panel">
+      <div class="panel-header"><span class="panel-title">👤 My Profile</span></div>
+      <div class="profile-body">
+        <div class="profile-avatar-col">
+          <div class="profile-avatar" id="profile-avatar-big">A</div>
+          <div class="profile-role-badge">Customer</div>
+          <div class="profile-joined" id="profile-joined"></div>
+        </div>
+        <div class="profile-fields-col">
+          <div class="form-row">
+            <div class="form-field"><label>Full Name</label><input type="text" id="profile-name" placeholder="Your name"></div>
+            <div class="form-field"><label>Email Address</label><input type="email" id="profile-email" placeholder="your@email.com"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-field"><label>Phone Number</label><input type="text" id="profile-phone" placeholder="+91 9999999999"></div>
+            <div class="form-field"><label>Customer ID</label><input type="text" id="profile-cid" readonly class="readonly-field"></div>
+          </div>
+          <div class="form-field">
+            <label>New Password <span class="optional-label">(leave blank to keep current)</span></label>
+            <input type="password" id="profile-newpass" placeholder="New password">
+          </div>
+          <button class="btn-primary" onclick="saveProfile()" style="width:auto;padding:10px 28px;">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     SCREEN: STAFF DASHBOARD
+══════════════════════════════ -->
+<div class="screen" id="screen-staff">
+  <div class="dash-header">
+    <div class="dash-title-group">
+      <h2>Staff Dashboard</h2>
+      <p>Manage check-ins, check-outs &amp; room operations</p>
+    </div>
+    <div class="dash-actions">
+      <button class="btn-gold" onclick="openGenCodeModal()">🔑 Generate Booking Code</button>
+    </div>
+  </div>
+
+  <div class="stats-grid" id="staff-stats"></div>
+
+  <div class="admin-tabs">
+    <button class="admin-tab active" id="stab-bookings" onclick="staffTab('bookings',this)">📋 All Bookings</button>
+    <button class="admin-tab" id="stab-rooms"    onclick="staffTab('rooms',this)">🛏 Room Status</button>
+    <button class="admin-tab" id="stab-today"    onclick="staffTab('today',this)">📅 Today</button>
+  </div>
+
+  <div class="admin-tab-content active" id="sc-bookings">
+    <div class="filter-bar">
+      <input type="text" class="search-input" placeholder="Search booking ID, customer name..." id="staff-search" oninput="renderStaffTable()">
+      <select class="filter-select" id="staff-status-filter" onchange="renderStaffTable()">
+        <option value="">All Status</option>
+        <option value="Booked">Booked</option>
+        <option value="Checked-in">Checked-in</option>
+        <option value="Completed">Completed</option>
+        <option value="Cancelled">Cancelled</option>
+      </select>
+    </div>
+    <div class="panel">
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Booking ID</th><th>Customer</th><th>Room</th><th>Guests</th>
+              <th>Check-in</th><th>Check-out</th><th>Amount</th><th>Pay Method</th>
+              <th>Pay Status</th><th>Status</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="staff-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-tab-content" id="sc-rooms">
+    <div class="rooms-grid" id="staff-rooms-grid"></div>
+  </div>
+
+  <div class="admin-tab-content" id="sc-today">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Expected Activity — <span id="today-date-label"></span></span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Booking ID</th><th>Customer</th><th>Room</th><th>Type</th><th>Date</th><th>Event</th><th>Action</th></tr></thead>
+          <tbody id="today-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     SCREEN: ADMIN DASHBOARD
+══════════════════════════════ -->
+<div class="screen" id="screen-admin">
+  <div class="dash-header">
+    <div class="dash-title-group">
+      <h2>Admin Dashboard</h2>
+      <p>Full system control — rooms, bookings, users &amp; revenue</p>
+    </div>
+    <div class="dash-actions">
+      <button class="btn-secondary" onclick="exportReport()">📊 Export CSV</button>
+      <button class="btn-gold" onclick="openAddRoomModal()">+ Add Room</button>
+    </div>
+  </div>
+
+  <div class="stats-grid" id="admin-stats"></div>
+
+  <div class="admin-tabs">
+    <button class="admin-tab active" id="atab-bookings"  onclick="adminTab('bookings',this)">📋 Bookings</button>
+    <button class="admin-tab" id="atab-rooms"     onclick="adminTab('rooms',this)">🛏 Rooms</button>
+    <button class="admin-tab" id="atab-revenue"   onclick="adminTab('revenue',this)">💰 Revenue</button>
+    <button class="admin-tab" id="atab-customers" onclick="adminTab('customers',this)">👥 Customers</button>
+    <button class="admin-tab" id="atab-users"     onclick="adminTab('users',this)">🔐 User Accounts</button>
+  </div>
+
+  <!-- ALL BOOKINGS (F8) -->
+  <div class="admin-tab-content active" id="ac-bookings">
+    <div class="filter-bar">
+      <input type="text" class="search-input" placeholder="Search booking, customer, room..." id="admin-search" oninput="renderAdminBookings()">
+      <select class="filter-select" id="admin-status-filter" onchange="renderAdminBookings()">
+        <option value="">All Status</option>
+        <option value="Booked">Booked</option>
+        <option value="Checked-in">Checked-in</option>
+        <option value="Completed">Completed</option>
+        <option value="Cancelled">Cancelled</option>
+      </select>
+      <select class="filter-select" id="admin-pay-filter" onchange="renderAdminBookings()">
+        <option value="">All Pay Status</option>
+        <option value="Paid">Paid</option>
+        <option value="Pending">Pending</option>
+        <option value="Failed">Failed</option>
+      </select>
+    </div>
+    <div class="panel">
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Booking ID</th><th>Customer</th><th>Room</th><th>Type</th>
+              <th>Guests</th><th>Check-in</th><th>Check-out</th><th>Nights</th>
+              <th>Amount</th><th>Method</th><th>Pay Status</th><th>Status</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="admin-bookings-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROOMS (F3 — add/update/delete) -->
+  <div class="admin-tab-content" id="ac-rooms">
+    <div class="filter-bar">
+      <select class="filter-select" id="admin-room-status-filter" onchange="renderAdminRooms()">
+        <option value="">All Status</option>
+        <option value="Available">Available</option>
+        <option value="Booked">Booked</option>
+        <option value="Checked-in">Checked-in</option>
+        <option value="Maintenance">Maintenance</option>
+      </select>
+      <select class="filter-select" id="admin-room-type-filter" onchange="renderAdminRooms()">
+        <option value="">All Types</option>
+        <option value="Single">Single</option>
+        <option value="Double">Double</option>
+        <option value="Suite">Suite</option>
+        <option value="Deluxe">Deluxe</option>
+      </select>
+    </div>
+    <div class="rooms-grid" id="admin-rooms-grid"></div>
+  </div>
+
+  <!-- REVENUE -->
+  <div class="admin-tab-content" id="ac-revenue">
+    <div class="stats-grid" id="revenue-stats" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px;"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;flex-wrap:wrap;">
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Payment Method Breakdown</span></div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Method</th><th>Transactions</th><th>Revenue</th><th>Share</th></tr></thead>
+            <tbody id="revenue-breakdown-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Room Type Revenue</span></div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Room Type</th><th>Bookings</th><th>Revenue</th></tr></thead>
+            <tbody id="room-revenue-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CUSTOMERS (F9) -->
+  <div class="admin-tab-content" id="ac-customers">
+    <div class="filter-bar">
+      <input type="text" class="search-input" placeholder="Search customer name, email, ID..." id="cust-search" oninput="renderCustomers()">
+    </div>
+    <div class="panel">
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Bookings</th><th>Total Spent</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="customers-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- USER ACCOUNTS -->
+  <div class="admin-tab-content" id="ac-users">
+    <div class="filter-bar">
+      <select class="filter-select" id="user-role-filter" onchange="renderUserAccounts()">
+        <option value="">All Roles</option>
+        <option value="customer">Customers</option>
+        <option value="staff">Staff</option>
+        <option value="admin">Admins</option>
+      </select>
+      <button class="btn-gold" onclick="openAddUserModal()" style="margin-left:auto;">+ Add User Account</button>
+    </div>
+    <div class="panel">
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>Name</th><th>Email / Login</th><th>Phone</th><th>Role</th><th>Account Status</th><th>Actions</th></tr></thead>
+          <tbody id="users-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end .page -->
+
+<!-- ══════════════════════════════
+     MODAL: BOOKING FLOW (F5, F6)
+══════════════════════════════ -->
+<div class="modal-backdrop hidden" id="modal-booking">
+  <div class="modal-box wide">
+    <button class="modal-close-btn" onclick="closeModal('modal-booking')">✕</button>
+
+    <div class="progress-steps">
+      <div class="pstep active" id="pstep-1"><div class="pstep-num">1</div> Details</div>
+      <div class="pstep-line"></div>
+      <div class="pstep" id="pstep-2"><div class="pstep-num">2</div> Payment</div>
+      <div class="pstep-line"></div>
+      <div class="pstep" id="pstep-3"><div class="pstep-num">3</div> Confirmed</div>
+    </div>
+
+    <!-- Step 1: Details -->
+    <div id="book-step-1">
+      <div class="modal-title" id="book-room-title">Book Room</div>
+      <p class="modal-sub" id="book-room-sub">Complete your booking details</p>
+      <div class="booking-summary" id="book-summary"></div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Guest Name <span class="req">*</span></label>
+          <input type="text" id="book-guest-name" placeholder="Full name">
+        </div>
+        <div class="form-field">
+          <label>Number of Guests <span class="req">*</span></label>
+          <select id="book-guests" class="modal-select" onchange="updateBookingSummary()">
+            <option value="1">1 Guest</option><option value="2">2 Guests</option>
+            <option value="3">3 Guests</option><option value="4">4 Guests</option>
+            <option value="5">5+ Guests</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Check-in Date <span class="req">*</span></label>
+          <input type="date" id="book-checkin" oninput="updateBookingSummary()">
+        </div>
+        <div class="form-field">
+          <label>Check-out Date <span class="req">*</span></label>
+          <input type="date" id="book-checkout" oninput="updateBookingSummary()">
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Special Requests</label>
+        <input type="text" id="book-requests" placeholder="e.g. high floor, early check-in, extra pillows...">
+      </div>
+      <div class="err-msg" id="book-step1-err"></div>
+      <button class="btn-primary" onclick="goBookStep(2)" style="margin-top:8px;">Continue to Payment →</button>
+    </div>
+
+    <!-- Step 2: Payment -->
+    <div id="book-step-2" style="display:none;">
+      <div class="modal-title">Secure Payment</div>
+      <p class="modal-sub">All transactions are encrypted &amp; secure 🔒</p>
+      <div class="booking-summary" id="book-pay-summary"></div>
+      <div class="payment-tabs">
+        <button class="pay-tab active" onclick="payTab('card',this)">💳 Card</button>
+        <button class="pay-tab" onclick="payTab('upi',this)">📱 UPI</button>
+        <button class="pay-tab" onclick="payTab('netbanking',this)">🏦 Net Banking</button>
+        <button class="pay-tab" onclick="payTab('cash',this)">💵 Pay at Hotel</button>
+      </div>
+
+      <div class="pay-form active" id="pf-card">
+        <div class="card-icons">
+          <div class="card-icon">VISA</div><div class="card-icon">MC</div>
+          <div class="card-icon">RUPAY</div><div class="card-icon">AMEX</div>
+        </div>
+        <div class="form-field"><label>Card Number</label><input type="text" id="card-num" placeholder="1234 5678 9012 3456" maxlength="19" oninput="formatCardNum(this)"></div>
+        <div class="form-row">
+          <div class="form-field"><label>Expiry</label><input type="text" placeholder="MM / YY" maxlength="7" oninput="formatExpiry(this)"></div>
+          <div class="form-field"><label>CVV</label><input type="password" placeholder="•••" maxlength="4"></div>
+        </div>
+        <div class="form-field"><label>Name on Card</label><input type="text" placeholder="As printed on card"></div>
+      </div>
+
+      <div class="pay-form" id="pf-upi">
+        <p style="font-size:0.82rem;color:var(--text2);margin-bottom:10px;">Select UPI app or enter UPI ID</p>
+        <div class="upi-logos">
+          <div class="upi-chip active" onclick="selectUpi(this)">GPay</div>
+          <div class="upi-chip" onclick="selectUpi(this)">PhonePe</div>
+          <div class="upi-chip" onclick="selectUpi(this)">Paytm</div>
+          <div class="upi-chip" onclick="selectUpi(this)">BHIM</div>
+          <div class="upi-chip" onclick="selectUpi(this)">Other</div>
+        </div>
+        <div class="form-field"><label>UPI ID</label><input type="text" id="upi-id" placeholder="yourname@upi"></div>
+      </div>
+
+      <div class="pay-form" id="pf-netbanking">
+        <label class="nb-label">Select Bank</label>
+        <select class="modal-select" style="margin-bottom:12px;">
+          <option value="">— Choose your bank —</option>
+          <option>State Bank of India</option><option>HDFC Bank</option>
+          <option>ICICI Bank</option><option>Axis Bank</option>
+          <option>Kotak Mahindra Bank</option><option>Bank of Baroda</option>
+          <option>Punjab National Bank</option><option>Yes Bank</option><option>Other</option>
+        </select>
+        <p style="font-size:0.78rem;color:var(--muted);">You will be redirected to your bank's secure portal.</p>
+      </div>
+
+      <div class="pay-form" id="pf-cash">
+        <div class="cash-notice">💡 Pay at hotel front desk during check-in. Booking confirmed but payment is due on arrival. Payment status will show as <b>Pending</b>.</div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:16px;">
+        <button class="btn-secondary" onclick="goBookStep(1)">← Back</button>
+        <button class="btn-primary" onclick="processPayment()" style="flex:1;">Pay &amp; Confirm Booking →</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Confirmed -->
+    <div id="book-step-3" style="display:none;">
+      <div class="success-box">
+        <div class="success-icon">✅</div>
+        <h3>Booking Confirmed!</h3>
+        <p>Your room has been successfully booked.</p>
+        <div class="booking-id-display">
+          <div class="label">Booking Reference</div>
+          <div class="bid" id="confirm-bid">—</div>
+        </div>
+        <div class="confirm-details" id="confirm-details"></div>
+        <p style="margin-bottom:0;color:var(--text2);font-size:0.82rem;">Show this reference ID at check-in. A confirmation has been sent to your email.</p>
+      </div>
+      <button class="btn-primary" onclick="closeModal('modal-booking');renderAll()" style="margin-top:12px;">Done ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MODAL: ADD / EDIT ROOM (F3)
+══════════════════════════════ -->
+<div class="modal-backdrop hidden" id="modal-room">
+  <div class="modal-box">
+    <button class="modal-close-btn" onclick="closeModal('modal-room')">✕</button>
+    <div class="modal-title" id="room-modal-title">Add New Room</div>
+    <p class="modal-sub">Fill in the room details below</p>
+    <input type="hidden" id="edit-room-id">
+    <div class="add-room-grid">
+      <div class="form-field"><label>Room Number <span class="req">*</span></label><input type="text" id="room-num-input" placeholder="e.g. 101"></div>
+      <div class="form-field">
+        <label>Room Type <span class="req">*</span></label>
+        <select id="room-type-input" class="modal-select">
+          <option>Single</option><option>Double</option><option>Suite</option><option>Deluxe</option>
+        </select>
+      </div>
+      <div class="form-field"><label>Price / Night (₹) <span class="req">*</span></label><input type="number" id="room-price-input" placeholder="3000"></div>
+      <div class="form-field"><label>Floor</label><input type="number" id="room-floor-input" placeholder="1"></div>
+      <div class="form-field"><label>Max Guests</label><input type="number" id="room-capacity-input" placeholder="2" min="1" max="10"></div>
+      <div class="form-field">
+        <label>Status</label>
+        <select id="room-status-input" class="modal-select">
+          <option value="Available">Available</option>
+          <option value="Maintenance">Maintenance</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-field"><label>Amenities (comma separated)</label><input type="text" id="room-amenities-input" placeholder="WiFi, AC, TV, Mini Bar"></div>
+    <div class="form-field"><label>Description</label><input type="text" id="room-desc-input" placeholder="Brief room description..."></div>
+    <div class="err-msg" id="room-err"></div>
+    <div style="display:flex;gap:10px;margin-top:4px;">
+      <button class="btn-primary" style="flex:1;" onclick="saveRoom()">Save Room</button>
+      <button class="btn-secondary" onclick="closeModal('modal-room')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MODAL: DELETE ROOM
+══════════════════════════════ -->
+<div class="modal-backdrop hidden" id="modal-delete-room">
+  <div class="modal-box" style="max-width:380px;text-align:center;">
+    <button class="modal-close-btn" onclick="closeModal('modal-delete-room')">✕</button>
+    <div style="font-size:2.5rem;margin-bottom:12px;">🗑️</div>
+    <div class="modal-title">Delete Room?</div>
+    <p class="modal-sub">Room <b id="delete-room-num">—</b> will be permanently removed. This cannot be undone.</p>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:8px;">
+      <button class="btn-secondary" onclick="closeModal('modal-delete-room')">Cancel</button>
+      <button class="btn-danger" onclick="confirmDeleteRoom()">Yes, Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MODAL: MODIFY BOOKING (Staff)
+══════════════════════════════ -->
+<div class="modal-backdrop hidden" id="modal-modify-booking">
+  <div class="modal-box">
+    <button class="modal-close-btn" onclick="closeModal('modal-modify-booking')">✕</button>
+    <div class="modal-title">Modify Booking</div>
+    <p class="modal-sub">Update booking dates, guests or payment status</p>
+    <input type="hidden" id="mod-booking-id">
+    <div class="form-field"><label>Guest Name</label><input type="text" id="mod-guest-name" placeholder="Guest name"></div>
+    <div class="form-row">
+      <div class="form-field"><label>Check-in Date</label><input type="date" id="mod-checkin"></div>
+      <div class="form-field"><label>Check-out Date</label><input type="date" id="mod-checkout"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-field">
+        <label>Number of Guests</label>
+        <select id="mod-guests" class="modal-select">
+          <option value="1">1 Guest</option><option value="2">2 Guests</option>
+          <option value="3">3 Guests</option><option value="4">4 Guests</option><option value="5">5+ Guests</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Payment Status</label>
+        <select id="mod-pay-status" class="modal-select">
+          <option value="Pending">Pending</option>
+          <option value="Paid">Paid</option>
+          <option value="Failed">Failed</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-field"><label>Internal Notes</label><input type="text" id="mod-notes" placeholder="Optional notes for staff..."></div>
+    <div class="err-msg" id="mod-err"></div>
+    <button class="btn-primary" onclick="saveModifyBooking()">Save Changes</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MODAL: ADD / EDIT USER (Admin)
+══════════════════════════════ -->
+<div class="modal-backdrop hidden" id="modal-user">
+  <div class="modal-box">
+    <button class="modal-close-btn" onclick="closeModal('modal-user')">✕</button>
+    <div class="modal-title" id="user-modal-title">Add User Account</div>
+    <p class="modal-sub">Create or update a user account in the system</p>
+    <input type="hidden" id="edit-user-id">
+    <div class="form-row">
+      <div class="form-field"><label>Full Name <span class="req">*</span></label><input type="text" id="user-name-input" placeholder="Full name"></div>
+      <div class="form-field">
+        <label>Role <span class="req">*</span></label>
+        <select id="user-role-input" class="modal-select">
+          <option value="customer">Customer</option>
+          <option value="staff">Staff</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-field"><label>Email / Login ID <span class="req">*</span></label><input type="text" id="user-email-input" placeholder="user@email.com"></div>
+    <div class="form-row">
+      <div class="form-field"><label>Phone</label><input type="text" id="user-phone-input" placeholder="+91 9999999999"></div>
+      <div class="form-field"><label>Password <span class="req">*</span></label><input type="password" id="user-pass-input" placeholder="Set password"></div>
+    </div>
+    <div class="form-field">
+      <label>Account Status</label>
+      <select id="user-status-input" class="modal-select">
+        <option value="Active">Active</option>
+        <option value="Inactive">Inactive</option>
+      </select>
+    </div>
+    <div class="err-msg" id="user-err"></div>
+    <div style="display:flex;gap:10px;margin-top:4px;">
+      <button class="btn-primary" style="flex:1;" onclick="saveUser()">Save Account</button>
+      <button class="btn-secondary" onclick="closeModal('modal-user')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MODAL: VIEW CUSTOMER (Admin)
+══════════════════════════════ -->
+<div class="modal-backdrop hidden" id="modal-view-customer">
+  <div class="modal-box wide">
+    <button class="modal-close-btn" onclick="closeModal('modal-view-customer')">✕</button>
+    <div class="modal-title" id="vc-name">Customer Details</div>
+    <p class="modal-sub" id="vc-id">ID: —</p>
+    <div class="booking-summary" id="vc-info"></div>
+    <div class="panel" style="margin-top:14px;">
+      <div class="panel-header"><span class="panel-title">Booking History</span></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Booking ID</th><th>Room</th><th>Check-in</th><th>Check-out</th><th>Nights</th><th>Amount</th><th>Status</th></tr></thead>
+          <tbody id="vc-bookings-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MODAL: GENERATE BOOKING CODE (Staff)
+══════════════════════════════ -->
+<div class="modal-backdrop hidden" id="modal-gencode">
+  <div class="modal-box" style="text-align:center;">
+    <button class="modal-close-btn" onclick="closeModal('modal-gencode')">✕</button>
+    <div class="modal-title">Booking Code</div>
+    <p class="modal-sub">Share with customer for manual booking confirmation</p>
+    <div class="booking-id-display" style="margin:20px 0;">
+      <div class="label">Generated Code</div>
+      <div class="bid" id="gen-code-val">—</div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button class="btn-secondary" onclick="genNewCode()">🔄 Regenerate</button>
+      <button class="btn-gold" onclick="copyCode()">📋 Copy Code</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
